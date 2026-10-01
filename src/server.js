@@ -1,98 +1,76 @@
-// // Line 1: Import Node.js DNS promises module
-// import dns from 'node:dns/promises';
-
-// // Line 2: Force Node runtime to use Cloudflare and Google DNS servers to resolve Atlas domains
-// dns.setServers(['1.1.1.1', '8.8.8.8']);
-
-// // Line 3: Load environment variables from .env
-// import dotenv from 'dotenv';
-// dotenv.config();
-
-// // Line 4: Import Express and CORS middleware
-// import express from 'express';
-// import cors from 'cors';
-
-// // Line 5: Import database connector function
-// import connectDB from './config/db.js';
-
-// // Line 6: Import project and profile route modules
-// import projectRoutes from './routes/projectRoutes.js';
-// import profileRoutes from './routes/profileRoutes.js';
-
-// // Line 7: Initialize Express app instance
-// const app = express();
-
-// // Line 8: Enable JSON request parsing
-// app.use(express.json());
-
-// // Line 9: Enable CORS for frontend requests
-// app.use(cors());
-
-// // Line 10: Establish connection to MongoDB Atlas
-// connectDB();
-
-// // Line 11: Mount routes for project portfolio and profile management
-// app.use('/api/projects', projectRoutes);
-// app.use('/api/profile', profileRoutes);
-
-// // Add this root landing route:
-// app.get('/', (req, res) => {
-//   res.status(200).send('🚀 David Portfolio API is live and connected to MongoDB!');
-// });
-
-// // Line 12: Basic health-check route
-// app.get('/api/health', (req, res) => {
-//   res.status(200).json({ status: 'OK' });
-// });
-
-// // Line 13: Define port and start listening
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => {
-//   console.log(`🚀 Portfolio backend running on http://localhost:${PORT}`);
-// });
-
-
-// Line 1: Import DNS resolver to handle public lookups
+// Line 1: Import DNS promises module to configure custom nameservers
 import dns from 'node:dns/promises';
+
+// Line 2: Route DNS queries through Cloudflare and Google to prevent Atlas SRV resolution failures
 dns.setServers(['1.1.1.1', '8.8.8.8']);
 
-// Line 2: Load environment variables
+// Line 3: Load environment variables from the local .env file
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Line 3: Import Express, CORS, and database connector
+// Line 4: Import Express web framework and CORS security middleware
 import express from 'express';
 import cors from 'cors';
+
+// Line 5: Import database connection function
 import connectDB from './config/db.js';
 
-// Line 4: Import routes
+// Line 6: Import project and profile route handlers
 import projectRoutes from './routes/projectRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 
-// Line 5: Initialize Express app
+// Line 7: Initialize the Express application instance
 const app = express();
-app.use(express.json());
-app.use(cors());
 
-// Line 6: Connect to MongoDB Atlas
+// Line 8: Define allowed frontend URLs (live Vercel portfolio domain and local Vite dev server)
+const allowedOrigins = [
+  'https://david-akano.vercel.app',
+  'http://localhost:5173'
+];
+
+// Line 9: Configure CORS middleware to check request origin against the allowed list
+app.use(cors({
+  // Line 10: Origin validator function evaluating incoming client requests
+  origin: function (origin, callback) {
+    // Line 11: Allow requests with no origin (like mobile tools or curl) or matching our allowed list
+    if (!origin || allowedOrigins.includes(origin)) {
+      // Line 12: Grant permission to process the request
+      callback(null, true);
+    } else {
+      // Line 13: Reject unauthorized origins trying to access your API
+      callback(new Error('Blocked by CORS policy: Unauthorized origin'));
+    }
+  },
+  // Line 14: Allow HTTP cookies and authorization headers across origins
+  credentials: true,
+}));
+
+// Line 15: Enable parsing of incoming JSON payload bodies
+app.use(express.json());
+
+// Line 16: Connect to MongoDB Atlas database
 connectDB();
 
-// Line 7: Root route — eliminates "Cannot GET /"
+// Line 17: Base landing route to confirm the API service is active and eliminate "Cannot GET /"
 app.get('/', (req, res) => {
   res.status(200).send('🚀 David Portfolio API is live and connected to MongoDB!');
 });
 
-// Line 8: Health check route
+// Line 18: Health check route for uptime monitors and server status inspection
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
 
-// Line 9: Mount API feature routes
+// Line 19: Mount routes for portfolio projects CRUD
 app.use('/api/projects', projectRoutes);
+
+// Line 20: Mount routes for owner profile data and avatar uploads
 app.use('/api/profile', profileRoutes);
 
-// Line 10: Start listening on port
+// Line 21: Assign port from environment variables or fallback to port 5000
 const PORT = process.env.PORT || 5000;
+
+// Line 22: Start Express HTTP server and listen on assigned port
 app.listen(PORT, () => {
   console.log(`🚀 Portfolio backend running on port ${PORT}`);
 });
