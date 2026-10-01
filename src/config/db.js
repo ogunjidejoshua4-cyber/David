@@ -1,32 +1,27 @@
-// Line 1: Import mongoose to construct and manage the MongoDB connection
+// Line 1: Import mongoose for database interactions
 import mongoose from 'mongoose';
 
-// Line 2: Import dns promises module from Node.js standard library
+// Line 2: Import dns promises to resolve SRV records
 import dns from 'node:dns/promises';
 
-// Line 3: Force Node.js to use Cloudflare and Google public DNS servers for Atlas SRV lookups
+// Line 3: Use Google and Cloudflare DNS to bypass ISP lookup issues
 dns.setServers(['1.1.1.1', '8.8.8.8']);
 
-// Line 4: Declare an asynchronous function named connectDB to handle database connections
+// Line 4: Declare async database connector
 const connectDB = async () => {
-  // Line 5: Wrap the connection call in a try block to intercept connection failures gracefully
+  // Line 5: Safe execution block
   try {
-    // Line 6: Connect to MongoDB Atlas using the URI string stored in your .env file
+    // Line 6: Connect using MONGO_URI from environment variables
     const conn = await mongoose.connect(process.env.MONGO_URI);
-
-    // Line 7: Print a success message confirming the cluster host address once connected
+    // Line 7: Confirm successful connection
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-  // Line 8: Catch block executes if MongoDB Atlas rejects the connection
+  // Line 8: Catch connection errors
   } catch (error) {
-    // Line 9: Print the exact connection error message to your terminal for quick debugging
+    // Line 9: Log the error to Render console without crashing the server
     console.error(`❌ DB Connection Error: ${error.message}`);
-
-    // Line 10: Terminate the Node.js process with exit code 1 to prompt nodemon for restart
-    process.exit(1);
-  // Line 11: Close the try-catch block
+    // Notice: We removed process.exit(1) so Render keeps the server alive
   }
-// Line 12: Close the connectDB function declaration
 };
 
-// Line 13: Export the connectDB function as default so server.js can run it on startup
+// Line 10: Export connection function
 export default connectDB;

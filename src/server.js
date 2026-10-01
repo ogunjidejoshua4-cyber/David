@@ -35,6 +35,11 @@ connectDB();
 app.use('/api/projects', projectRoutes);
 app.use('/api/profile', profileRoutes);
 
+// Add this root landing route:
+app.get('/', (req, res) => {
+  res.status(200).send('🚀 David Portfolio API is live and connected to MongoDB!');
+});
+
 // Line 12: Basic health-check route
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
